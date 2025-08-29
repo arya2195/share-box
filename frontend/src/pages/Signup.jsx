@@ -231,7 +231,7 @@ else{
             <p className="text-gray-600">
               Already have an account?{' '}
               <a 
-                href="#" 
+                href="/login" 
                 className="font-medium text-purple-600 hover:text-purple-800 transition-colors duration-200"
               >
                 Sign in here
