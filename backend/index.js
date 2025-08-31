@@ -16,7 +16,7 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 app.use('/api/user',auth)
 app.use('/api/user/auth',auth)
-app.use('/api/file',file);
+app.use('/api/files',file);
 app.listen(process.env.PORT||3000, () => {
   console.log(`Server is running on http://localhost:${process.env.PORT}`);
 });

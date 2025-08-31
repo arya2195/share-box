@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
 import { Upload as UploadIcon, File, CheckCircle, AlertCircle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 const Upload = () => {
   const [selectedFile, setSelectedFile] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
+  const navigate=useNavigate()
 
   const handleFileChange = (e) => {
     setSelectedFile(e.target.files?.[0] || null)
@@ -24,12 +26,13 @@ const Upload = () => {
 
     const formData = new FormData()
     formData.append('file', selectedFile)
-    // userId removed per request
+    
 
     setIsUploading(true)
     try {
       const response = await fetch('http://localhost:3000/api/file/upload', {
         method: 'POST',
+        credentials:'include',
         body: formData,
       })
 
@@ -39,6 +42,7 @@ const Upload = () => {
       }
       setResult(data)
       setSelectedFile(null)
+      navigate('/');
     } catch (err) {
       setError(err.message || 'Something went wrong')
     } finally {

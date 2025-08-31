@@ -4,6 +4,7 @@ import Header from './Header'
 import Footer from './Footer'
 import './Home.css'
 import './Header.css'
+import {toast } from 'react-toastify'
 
 // Mock data - replace with actual API call
 const mockFiles = [
@@ -51,9 +52,27 @@ function Home() {
   const [files, setFiles] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [userName] = useState('Alex Johnson') // Mock user name
+  const [userName] = useState('Alex Johnson')
+  const fetchfilelist=async()=>{
+     setLoading(true)
+    const res=await fetch(`http://localhost:3000/api/user/fetchfile`,{
+      method:'GET',
+      credentials:'include',
+    })
+    if(!res.ok){
+      const data=await res.json();
+      toast.error(data.msg);
+    }
+    else{
+      const data=await res.json();
+      toast.success('files fetched successfully');
+      setFiles(data.files);
+    }
+    setLoading(false)
+  }
 
   useEffect(() => {
+   
     // Simulate API call
     const fetchFiles = async () => {
       setLoading(true)
@@ -62,6 +81,7 @@ function Home() {
       setFiles(mockFiles)
       setLoading(false)
     }
+    
 
     fetchFiles()
   }, [])
@@ -76,6 +96,28 @@ function Home() {
     if (hour < 18) return 'Good afternoon'
     return 'Good evening'
   }
+
+  const openFile = (file) => {
+  if (file.isPublic) {
+    window.open(file.fileurl, "_blank"); // direct S3
+  } else {
+    window.open(`${import.meta.env.VITE_BACKEND_URL}/api/file/${file._id}/view`, "_blank"); // backend
+  }
+};
+
+const downloadfile=async (file)=>{
+ const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/file/${file._id}/download`,{
+  method:'GET',
+  credentials:'include'
+ });
+    const data = await res.json();
+
+    const link = document.createElement("a");
+    link.href = data.url;
+    link.download = file.name;
+    link.click();
+}
+
 
   return (
     <div className="app-wrapper home-page">
@@ -133,7 +175,11 @@ function Home() {
           ) : (
             <div className="files-grid">
               {filteredFiles.map((file) => (
-                <div key={file.id} className="file-card">
+                <div key={file.id} 
+                onClick={() => console.log("Selected:", file.name)}
+  onDoubleClick={()=>openFile(file)}
+
+                className="file-card">
                   <div className="file-header">
                     <div className="file-icon-wrapper">
                       {getFileIcon(file.type)}

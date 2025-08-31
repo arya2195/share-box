@@ -1,9 +1,13 @@
 import express from 'express';
-import { uploadFile } from '../controller/file.js';
+import { downloadFile, uploadFile } from '../controller/file.js';
 import multer from 'multer';
+import authmiddlewares from '../middlewares/authmiddlewares.js';
+import { viewFile } from '../controller/file.js';
 const router = express.Router();
 const upload = multer();
-router.post('/upload', upload.single('file'), uploadFile);
+router.post('/upload', upload.single('file'),authmiddlewares ,uploadFile);
 //router.delete('/delete/:key', deleteFile);
 //router.get('/file/:key', getFile);
+router.get('/:fileId/view',authmiddlewares,viewFile);
+router.get('/:id/download',authmiddlewares,downloadFile);
 export default router;

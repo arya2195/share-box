@@ -8,6 +8,7 @@ const fileSchema = new mongoose.Schema({
     s3key: { type: String, required: true },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     isshared:{ type: Boolean, default: false },
+    size:{ type: Number, required: true }
 });
 const UserFile = mongoose.model('UserFile', fileSchema);
 export default UserFile;
