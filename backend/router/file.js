@@ -9,7 +9,7 @@ const upload = multer();
 router.post('/upload', upload.single('file'), authmiddlewares, uploadFile);
 router.get('/fetchfile', authmiddlewares, FetchFilelist);
 router.delete('/deletefile/:FileId', authmiddlewares,deleteFile);
-//router.get('/file/:key', getFile);
+//router.get('/file/:key', getFile);kkjjkjk
 router.get('/:fileId/view', authmiddlewares, viewFile);
 router.get('/:fileId/download', authmiddlewares, downloadFile);
 router.get('/createsharelink/:fileId', authmiddlewares, sharefile);
