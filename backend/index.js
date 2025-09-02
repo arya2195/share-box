@@ -9,7 +9,7 @@ import file from './router/file.js';
 dotenv.config();
 app.use(express.json());
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: process.env.FRONTEND_URL,
     credentials: true
   }));
 app.use(cookieParser());
@@ -17,8 +17,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/user',auth)
 app.use('/api/user/auth',auth)
 app.use('/api/files',file);
+
 app.listen(process.env.PORT||3000, () => {
-  console.log(`Server is running on http://localhost:${process.env.PORT}`);
+  console.log(`Server is running on  PORT ${process.env.PORT}`);
 });
 connectDB(process.env.MONGOURI).then(()=>{
     console.log("Connected to MongoDB");

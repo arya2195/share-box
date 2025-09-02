@@ -1,18 +1,39 @@
 import { useState } from 'react'
 import { Menu, X, Upload, Share2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useContext } from 'react'
+import Authcontext from '../../context/Authcontext'
+import { useEffect } from 'react'
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isLoggedIn, setIsLoggedIn] = useState(false) // Mock auth state
+  const [isLoggedIn, setIsLoggedIn] = useState(false) 
+  const {user,setuser}=useContext(Authcontext);
 const navigate=useNavigate();
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
   }
 
-  const handleAuth = () => {
-    setIsLoggedIn(!isLoggedIn)
-  }
+   const logout=async()=>{
+        try{
+            const res=await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/logout`,{
+                method:'POST',
+                credentials:'include'
+            })
+            if(res.ok){
+                setuser({});
+                setIsLoggedIn(false);
+            }
+        }
+        catch(err){
+            console.log(err);
+        }
+    }
+
+ 
+  useEffect(()=>{
+    if(user!={})setIsLoggedIn(true);
+  },[])
 
   return (
     <header className="header">
@@ -33,7 +54,7 @@ const navigate=useNavigate();
             Upload Files
           </button>
           {isLoggedIn ? (
-            <button onClick={handleAuth} className="nav-button logout-btn">
+            <button onClick={logout} className="nav-button logout-btn">
               Logout
             </button>
           ) : (
@@ -67,7 +88,7 @@ const navigate=useNavigate();
             Upload Files
           </button>
           {isLoggedIn ? (
-            <button onClick={handleAuth} className="mobile-nav-button logout-btn">
+            <button onClick={logout} className="mobile-nav-button logout-btn">
               Logout
             </button>
           ) : (

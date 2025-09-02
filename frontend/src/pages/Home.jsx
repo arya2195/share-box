@@ -1,22 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import { Search, File, FileText, Image, Music, Video, Archive, Code } from 'lucide-react'
 import Header from './Header'
 import Footer from './Footer'
 import './Home.css'
 import './Header.css'
 import {toast } from 'react-toastify'
+import Authcontext from '../../context/Authcontext'
+import { useNavigate } from 'react-router-dom'
 
-// Mock data - replace with actual API call
-const mockFiles = [
-  { id: 1, name: 'project-report.pdf', type: 'pdf', size: '2.4 MB', modified: '2025-01-02' },
-  { id: 2, name: 'presentation.pptx', type: 'presentation', size: '15.2 MB', modified: '2025-01-01' },
-  { id: 3, name: 'budget-2025.xlsx', type: 'spreadsheet', size: '876 KB', modified: '2024-12-30' },
-  { id: 4, name: 'team-photo.jpg', type: 'image', size: '3.1 MB', modified: '2024-12-28' },
-  { id: 5, name: 'app.js', type: 'code', size: '12 KB', modified: '2024-12-27' },
-  { id: 6, name: 'meeting-notes.docx', type: 'document', size: '245 KB', modified: '2024-12-25' },
-  { id: 7, name: 'demo-video.mp4', type: 'video', size: '45.3 MB', modified: '2024-12-24' },
-  { id: 8, name: 'backup.zip', type: 'archive', size: '128 MB', modified: '2024-12-20' }
-]
+
 
 const getFileIcon = (type) => {
   switch (type) {
@@ -52,42 +44,49 @@ function Home() {
   const [files, setFiles] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [userName] = useState('Alex Johnson')
+  const {user,setuser}=useContext(Authcontext);
+  const navigate=useNavigate();
+  const deleteFile=async(id)=>{
+    const res=await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/files/deletefile/${id}`,{
+      method:'DELETE',
+      credentials:'include'
+    })
+    const data=await res.json();
+    if(!res.ok){
+      toast.error(data.msg);
+    }
+    else {
+      toast.success('files delted successfully');
+    }
+  }
   const fetchfilelist=async()=>{
      setLoading(true)
-    const res=await fetch(`http://localhost:3000/api/user/fetchfile`,{
+    const res=await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/files/fetchfile`,{
       method:'GET',
       credentials:'include',
     })
     if(!res.ok){
       const data=await res.json();
       toast.error(data.msg);
+      console.log(data)
     }
     else{
       const data=await res.json();
       toast.success('files fetched successfully');
+      console.log(data.files);
       setFiles(data.files);
+      console.log(data)
     }
     setLoading(false)
   }
 
   useEffect(() => {
-   
-    // Simulate API call
-    const fetchFiles = async () => {
-      setLoading(true)
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setFiles(mockFiles)
-      setLoading(false)
-    }
-    
+      fetchfilelist();
 
-    fetchFiles()
-  }, [])
+    }, [])
 
   const filteredFiles = files.filter(file =>
-    file.name.toLowerCase().includes(searchTerm.toLowerCase())
+    file.filename.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const getGreeting = () => {
@@ -97,25 +96,62 @@ function Home() {
     return 'Good evening'
   }
 
-  const openFile = (file) => {
-  if (file.isPublic) {
-    window.open(file.fileurl, "_blank"); // direct S3
-  } else {
-    window.open(`${import.meta.env.VITE_BACKEND_URL}/api/file/${file._id}/view`, "_blank"); // backend
-  }
-};
+  const openFile = async (file) => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/files/${file._id}/view`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (res.ok) {
+      
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, "_blank");
+      } else {
+       
+        downloadfile(file);
+      }
+    } catch (err) {
+      console.error('Error opening file:', err);
+      
+      downloadfile(file);
+    }
+  };
 
 const downloadfile=async (file)=>{
- const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/file/${file._id}/download`,{
-  method:'GET',
-  credentials:'include'
- });
-    const data = await res.json();
+ try {
+   const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/files/${file._id}/download`,{
+    method:'GET',
+    credentials:'include'
+   });
+   
+   if (!res.ok) {
+     const errorData = await res.json();
+     toast.error(errorData.msg || 'Download failed');
+     return;
+   }
 
-    const link = document.createElement("a");
-    link.href = data.url;
-    link.download = file.name;
-    link.click();
+   
+   const blob = await res.blob();
+   
+   
+   const url = window.URL.createObjectURL(blob);
+   const link = document.createElement("a");
+   link.href = url;
+   link.download = file.filename;
+   document.body.appendChild(link);
+   link.click();
+   document.body.removeChild(link);
+   
+   
+   window.URL.revokeObjectURL(url);
+   
+   toast.success('File downloaded successfully');
+ } catch (err) {
+   console.error('Download error:', err);
+   toast.error('Download failed');
+ }
 }
 
 
@@ -128,7 +164,7 @@ const downloadfile=async (file)=>{
         <header className="mb-12">
           <div className="welcome-section">
             <h1 className="welcome-title">
-              {getGreeting()}, {userName}
+              {getGreeting()}, {user?.name}
             </h1>
             <p className="welcome-subtitle">
               Welcome back to your file dashboard. Here are your recent files.
@@ -175,25 +211,42 @@ const downloadfile=async (file)=>{
           ) : (
             <div className="files-grid">
               {filteredFiles.map((file) => (
-                <div key={file.id} 
-                onClick={() => console.log("Selected:", file.name)}
-  onDoubleClick={()=>openFile(file)}
-
+                <div key={file._id} 
+                onClick={() => console.log("Selected:", file.filename)}
+                onDoubleClick={()=>openFile(file)}
                 className="file-card">
+                  
                   <div className="file-header">
+                    
                     <div className="file-icon-wrapper">
-                      {getFileIcon(file.type)}
+                      {getFileIcon(file.filetype)}
                     </div>
-                    <span className={`file-type-badge ${getFileTypeColor(file.type)}`}>
-                      {file.type}
+                    <span className={`file-type-badge ${getFileTypeColor(file.filetype)}`}>
+                      {file.filetype}
                     </span>
                   </div>
                   <div className="file-content">
-                    <h3 className="file-name">{file.name}</h3>
+                    <h3 className="file-name">{file.filename}</h3>
                     <div className="file-meta">
                       <span className="file-size">{file.size}</span>
-                      <span className="file-modified">Modified {file.modified}</span>
+                      <span className="file-modified">Modified {new Date(file.uploadedAt).toLocaleDateString()}</span>
+                      <div className='flex flex-col'>
+                      <button onClick={()=>{navigate(`/share/${file._id}`)}}>share</button>
+                     
+                  
                     </div>
+                    </div>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        downloadfile(file);
+                      }}
+                      className="download-btn"
+                    >
+                      Download
+                    </button>
+                    <button onClick={()=>deleteFile(file._id)}className='mx-23' >Delete</button>
+                    
                   </div>
                 </div>
               ))}

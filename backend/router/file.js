@@ -1,13 +1,20 @@
 import express from 'express';
-import { downloadFile, uploadFile } from '../controller/file.js';
+import { downloadFile, uploadFile,deleteFile, FetchFilelist, sharefile,viewsharedfile,downloadsharedfile,deletesharelink, fetchsharelink } from '../controller/file.js';
 import multer from 'multer';
 import authmiddlewares from '../middlewares/authmiddlewares.js';
-import { viewFile } from '../controller/file.js';
+import { viewFile } from '../controller/file.js';   
+
 const router = express.Router();
 const upload = multer();
-router.post('/upload', upload.single('file'),authmiddlewares ,uploadFile);
-//router.delete('/delete/:key', deleteFile);
+router.post('/upload', upload.single('file'), authmiddlewares, uploadFile);
+router.get('/fetchfile', authmiddlewares, FetchFilelist);
+router.delete('/deletefile/:FileId', authmiddlewares,deleteFile);
 //router.get('/file/:key', getFile);
-router.get('/:fileId/view',authmiddlewares,viewFile);
-router.get('/:id/download',authmiddlewares,downloadFile);
+router.get('/:fileId/view', authmiddlewares, viewFile);
+router.get('/:fileId/download', authmiddlewares, downloadFile);
+router.get('/createsharelink/:fileId', authmiddlewares, sharefile);
+router.delete('/deletesharelink/:fileId',authmiddlewares,deletesharelink);
+router.get('/fetchsharelink/:fileId', authmiddlewares, fetchsharelink);
+router.get('/shared/:shareid', viewsharedfile);
+router.get('/shared/:shareid/download', downloadsharedfile);
 export default router;

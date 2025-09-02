@@ -41,7 +41,7 @@ const Login = () => {
 
     setIsLoading(true);
     try{
-    const res=await fetch('http://localhost:3000/api/user/auth/login',{
+    const res=await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/user/auth/login`,{
         method:'POST',
         credentials:'include',
         headers: { "Content-Type": "application/json" },
@@ -55,7 +55,8 @@ const Login = () => {
      else{
         const data=await res.json();
         toast.success('Logged in successfully');
-        setuser(data.user)
+        console.log(data);
+        setuser(data.user);
         navigate('/');
      }
     }

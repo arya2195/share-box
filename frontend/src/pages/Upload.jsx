@@ -30,7 +30,7 @@ const Upload = () => {
 
     setIsUploading(true)
     try {
-      const response = await fetch('http://localhost:3000/api/file/upload', {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/files/upload`, {
         method: 'POST',
         credentials:'include',
         body: formData,
@@ -38,9 +38,12 @@ const Upload = () => {
 
       const data = await response.json()
       if (!response.ok) {
+            console.log(data);
         throw new Error(data?.msg || 'Upload failed')
+    
       }
       setResult(data)
+      console.log(data);
       setSelectedFile(null)
       navigate('/');
     } catch (err) {
